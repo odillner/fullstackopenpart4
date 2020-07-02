@@ -1,21 +1,21 @@
 const Blog = require('../models/blog.js')
 
 module.exports = {
-    list: (req, res, next) => {
+    list: (req, res) => {
         Blog
-        .find({})
-        .then(blogs => {
-          res.json(blogs)
-        })
+            .find({})
+            .then(blogs => {
+                res.json(blogs)
+            })
     },
 
-    create: (req, res, next) => {
+    create: (req, res) => {
         const blog = new Blog(req.body)
 
         blog
-          .save()
-          .then(result => {
-            res.status(201).json(result)
-        })
+            .save()
+            .then(result => {
+                res.status(201).json(result)
+            })
     }
 }

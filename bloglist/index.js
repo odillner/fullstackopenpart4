@@ -1,4 +1,3 @@
-const http = require('http')
 const express = require('express')
 const app = express()
 const cors = require('cors')
@@ -21,5 +20,5 @@ app.use(express.json())
 routes(app)
 
 app.listen(config.PORT, () => {
-  console.log(`Server running on port ${config.PORT}`)
+    console.log(`Server running on port ${config.PORT}`)
 })
