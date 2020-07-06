@@ -20,8 +20,11 @@ mongoose
 app.use(cors())
 app.use(express.json())
 
-morgan.token('body', function (req) { return JSON.stringify(req.body) })
-app.use(morgan(':method :url :status :response-time ms - :res[content-length] byte :body - :req[content-length] byte'))
+
+if (process.env.NODE_ENV !== 'test') {
+    morgan.token('body', function (req) { return JSON.stringify(req.body) })
+    app.use(morgan(':method :url :status :response-time ms - :res[content-length] byte :body - :req[content-length] byte'))
+}
 
 routes(app)
 
