@@ -1,0 +1,10 @@
+post http://localhost:3004/api/blogs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFiY2QxMjM0NSIsImlkIjoiNWYwYzRlNDZmM2I2ZTQzOWY4YTJhYjE2IiwiaWF0IjoxNTk0NjQ2ODcwfQ.q2KZGW6VNtQt_LpAOL-l8SbZaAF18mKSSlKjnqstSLo
+Content-Type: application/json
+
+{
+    "title": "hejsanhejsan",
+    "author": "hejsanhejsan",
+    "url": "hejsanhejsan",
+    "likes": "5"
+}

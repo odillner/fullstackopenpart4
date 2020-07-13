@@ -3,7 +3,9 @@ const Blog = require('../models/blog.js')
 module.exports = {
     list: async (req, res, next) => {
         try {
-            const blogs = await Blog.find({})
+            const blogs = await Blog
+                .find({})
+                .populate('user')
 
             res.json(blogs)
         } catch (err) {
@@ -13,11 +15,29 @@ module.exports = {
 
     create: async (req, res, next) => {
         try {
-            const blog = new Blog(req.body)
+            const user = req.authUser
 
-            const result = await blog.save()
+            if (!user) {
+                let err = new Error('Invalid token')
+                err.name = 'AuthenticationError'
+                throw err
+            }
 
-            res.status(201).json(result)
+            const body = req.body
+
+            const blog = new Blog({
+                title: body.title,
+                author: body.author,
+                url: body.url,
+                likes: body.likes,
+                user: user._id
+            })
+
+            const savedBlog = await blog.save()
+            user.blogs = user.blogs.concat(savedBlog._id)
+            await user.save()
+
+            res.status(201).json(savedBlog)
         } catch (err) {
             next(err)
         }
@@ -26,7 +46,10 @@ module.exports = {
 
     read: async (req, res, next) => {
         try {
-            const blog = await Blog.findById(req.params.id)
+            const id = req.params.id
+
+            const blog = await Blog.findById(id)
+                .populate('user')
 
             if (!blog) {
                 let err = new Error('Resource not found')
@@ -44,7 +67,13 @@ module.exports = {
 
     update: async (req, res, next) => {
         try {
-            const blog = await Blog.findOneAndUpdate({_id: req.params.id}, req.body, {new: true, useFindAndModify: false, runValidators: true})
+            const id = req.params.id
+            const body = req.body
+            const blog = await Blog.findOneAndUpdate(
+                {_id: id},
+                body,
+                {new: true, useFindAndModify: false, runValidators: true}
+            )
 
             if (!blog) {
                 let err = new Error('Resource not found')
@@ -61,7 +90,16 @@ module.exports = {
 
     remove: async (req, res, next) => {
         try {
-            const blog = await Blog.findById(req.params.id)
+            const id = req.params.id
+            const user = req.authUser
+
+            if (!user) {
+                let err = new Error('Invalid token')
+                err.name = 'AuthenticationError'
+                throw err
+            }
+
+            const blog = await Blog.findById(id)
 
             if (!blog) {
                 let err = new Error('Resource not found')
@@ -69,7 +107,18 @@ module.exports = {
                 throw err
             }
 
-            await Blog.deleteOne({'_id':req.params.id})
+            if (user.id != blog.user) {
+                let err = new Error('Invalid user')
+                err.name = 'AuthenticationError'
+                throw err
+            }
+
+
+
+            const deletedBlog = await Blog.deleteOne({'_id':id})
+            user.blogs = user.blogs.filter(blog => blog.id != deletedBlog._id)
+            await user.save()
+
             res.status(200).end()
         } catch (err) {
             next(err)

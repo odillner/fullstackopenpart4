@@ -144,7 +144,7 @@ describe('reading/manipulating specific blogs', () => {
         let specificBlog = listWithSeveralBlogs[0]
 
         await api
-            .get('/api/blogs/' + invalidId)
+            .put('/api/blogs/' + invalidId)
             .send(specificBlog)
             .expect(400)
     })
@@ -154,7 +154,7 @@ describe('reading/manipulating specific blogs', () => {
         let specificBlog = listWithSeveralBlogs[0]
 
         await api
-            .get('/api/blogs/' + validNonExistantId)
+            .put('/api/blogs/' + validNonExistantId)
             .send(specificBlog)
             .expect(404)
     })
