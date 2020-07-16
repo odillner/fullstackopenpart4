@@ -29,7 +29,7 @@ module.exports = {
 
             res
                 .status(200)
-                .send({token, user: userForToken})
+                .send({token, user})
 
         } catch (err) {
             next(err)

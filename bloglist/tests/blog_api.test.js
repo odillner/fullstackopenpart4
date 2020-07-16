@@ -3,16 +3,41 @@ const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
 const Blog = require('../models/blog')
-const {listWithOneBlog, listWithSeveralBlogs} = require('./test_helpers')
+const User = require('../models/user')
+
+const {listWithOneBlog, listWithSeveralBlogs, initialUsers} = require('./test_helpers')
+
+let authUser
 
 beforeEach(async () => {
+    await User.deleteMany({})
+
+    for (let user of initialUsers) {
+        await api
+            .post('/api/users')
+            .send(user)
+    }
+
+    const res = await api
+        .post('/api/login')
+        .send({
+            username: initialUsers[0].username,
+            password: initialUsers[0].password
+        })
+
+    authUser = res.body
+
     await Blog.deleteMany({})
 
+
     for (const blog of listWithSeveralBlogs) {
-        const newBlog = new Blog(blog)
-        await newBlog.save()
+        await api
+            .post('/api/blogs')
+            .set('Authorization', `Bearer ${authUser.token}`)
+            .send(blog)
     }
 })
+
 describe('getting blogs', () => {
     test('blogs are returned as json', async () => {
         await api
@@ -48,9 +73,10 @@ describe('getting blogs', () => {
 })
 
 describe('adding blogs', () => {
-    test('a valid blog can be added', async () => {
+    test('a valid blog with valid token can be added', async () => {
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${authUser.token}`)
             .send(listWithOneBlog[0])
             .expect(201)
             .expect('Content-Type', /application\/json/)
@@ -65,11 +91,23 @@ describe('adding blogs', () => {
         )
     })
 
+    test('a valid blog without valid token cant be added', async () => {
+        await api
+            .post('/api/blogs')
+            .send(listWithOneBlog[0])
+            .expect(401)
+
+        const response = await api.get('/api/blogs')
+
+        expect(response.body).toHaveLength(listWithSeveralBlogs.length)
+    })
+
     test('blog without title is not added', async () => {
         const newBlog = {url: 'asd'}
 
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${authUser.token}`)
             .send(newBlog)
             .expect(400)
 
@@ -83,6 +121,7 @@ describe('adding blogs', () => {
 
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${authUser.token}`)
             .send(newBlog)
             .expect(400)
 
@@ -96,12 +135,14 @@ describe('adding blogs', () => {
 
         const response = await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${authUser.token}`)
             .send(newBlogWithoutLikes)
             .expect(201)
 
         expect(response.body.likes).toBe(0)
     })
 })
+
 describe('reading/manipulating specific blogs', () => {
     test('specific blog with valid id is fetched', async () => {
         const specificBlog = listWithSeveralBlogs[0]
@@ -164,6 +205,7 @@ describe('reading/manipulating specific blogs', () => {
 
         await api
             .delete('/api/blogs/' + specificBlog._id)
+            .set('Authorization', `Bearer ${authUser.token}`)
             .expect(200)
 
         const blogs = await api.get('/api/blogs')
@@ -176,6 +218,7 @@ describe('reading/manipulating specific blogs', () => {
 
         await api
             .delete('/api/blogs/' + invalidId)
+            .set('Authorization', `Bearer ${authUser.token}`)
             .expect(400)
 
         const blogs = await api.get('/api/blogs')
@@ -188,6 +231,7 @@ describe('reading/manipulating specific blogs', () => {
 
         await api
             .get('/api/blogs/' + validNonExistantId)
+            .set('Authorization', `Bearer ${authUser.token}`)
             .expect(404)
 
         const blogs = await api.get('/api/blogs')
