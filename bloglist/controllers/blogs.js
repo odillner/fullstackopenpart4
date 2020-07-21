@@ -62,13 +62,17 @@ module.exports = {
 
     update: async (req, res, next) => {
         try {
+            const user = req.authUser
             const id = req.params.id
             const body = req.body
-            const blog = await Blog.findOneAndUpdate(
-                {_id: id},
-                body,
-                {new: true, useFindAndModify: false, runValidators: true}
-            )
+
+            if (!user) {
+                let err = new Error('Invalid token')
+                err.name = 'AuthenticationError'
+                throw err
+            }
+
+            const blog = await Blog.findById(id)
 
             if (!blog) {
                 let err = new Error('Resource not found')
@@ -76,7 +80,25 @@ module.exports = {
                 throw err
             }
 
-            res.json(blog)
+            if (user.id != blog.user) {
+                let err = new Error('Invalid user')
+                err.name = 'AuthenticationError'
+                throw err
+            }
+
+            const newBlog = await Blog.findOneAndUpdate(
+                {_id: id},
+                body,
+                {new: true, useFindAndModify: false, runValidators: true}
+            )
+
+            if (!newBlog) {
+                let err = new Error('Resource not found')
+                err.name = 'NotFoundError'
+                throw err
+            }
+
+            res.json(newBlog)
             res.end()
         } catch (err) {
             next(err)
