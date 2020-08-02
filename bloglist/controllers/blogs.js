@@ -5,7 +5,6 @@ module.exports = {
         try {
             const blogs = await Blog
                 .find({})
-                .populate('user')
 
             res.json(blogs)
         } catch (err) {
@@ -44,7 +43,6 @@ module.exports = {
             const id = req.params.id
 
             const blog = await Blog.findById(id)
-                .populate('user')
 
             if (!blog) {
                 let err = new Error('Resource not found')
@@ -62,29 +60,8 @@ module.exports = {
 
     update: async (req, res, next) => {
         try {
-            const user = req.authUser
             const id = req.params.id
             const body = req.body
-
-            if (!user) {
-                let err = new Error('Invalid token')
-                err.name = 'AuthenticationError'
-                throw err
-            }
-
-            const blog = await Blog.findById(id)
-
-            if (!blog) {
-                let err = new Error('Resource not found')
-                err.name = 'NotFoundError'
-                throw err
-            }
-
-            if (user.id != blog.user) {
-                let err = new Error('Invalid user')
-                err.name = 'AuthenticationError'
-                throw err
-            }
 
             const newBlog = await Blog.findOneAndUpdate(
                 {_id: id},
