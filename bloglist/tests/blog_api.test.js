@@ -174,6 +174,7 @@ describe('reading/manipulating specific blogs', () => {
 
         const response = await api
             .put('/api/blogs/' + specificBlog._id)
+            .set('Authorization', `Bearer ${authUser.token}`)
             .send(specificBlog)
             .expect(200)
 
@@ -186,6 +187,7 @@ describe('reading/manipulating specific blogs', () => {
 
         await api
             .put('/api/blogs/' + invalidId)
+            .set('Authorization', `Bearer ${authUser.token}`)
             .send(specificBlog)
             .expect(400)
     })
@@ -196,6 +198,7 @@ describe('reading/manipulating specific blogs', () => {
 
         await api
             .put('/api/blogs/' + validNonExistantId)
+            .set('Authorization', `Bearer ${authUser.token}`)
             .send(specificBlog)
             .expect(404)
     })

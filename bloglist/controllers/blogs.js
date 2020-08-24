@@ -62,19 +62,20 @@ module.exports = {
         try {
             const id = req.params.id
             const body = req.body
-            const blog = await Blog.findOneAndUpdate(
+
+            const newBlog = await Blog.findOneAndUpdate(
                 {_id: id},
                 body,
                 {new: true, useFindAndModify: false, runValidators: true}
             )
 
-            if (!blog) {
+            if (!newBlog) {
                 let err = new Error('Resource not found')
                 err.name = 'NotFoundError'
                 throw err
             }
 
-            res.json(blog)
+            res.json(newBlog)
             res.end()
         } catch (err) {
             next(err)
