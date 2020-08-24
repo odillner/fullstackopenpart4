@@ -7,6 +7,7 @@ module.exports = {
         try {
             const users = await User
                 .find({})
+                .populate('blogs')
 
             res.json(users)
         } catch (err) {
@@ -54,6 +55,7 @@ module.exports = {
 
             const user = await User
                 .findById(id)
+                .populate('blogs')
 
             if (!user) {
                 let err = new Error('Resource not found')
